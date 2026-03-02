@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: clothebackend
+    env: dotnet
+    plan: free
+    rootDir: YeshiBackend
+    buildCommand: dotnet restore && dotnet publish -c Release -o out
+    startCommand: dotnet out/YeshiBackend.dll
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:$PORT
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: FrontendOrigins__0
+        sync: false
+      - key: FrontendOrigins__1
+        sync: false
