@@ -1,18 +1,18 @@
-# Yeshi Platform (ASP.NET Core + SQL Server)
+# Yeshi Platform (ASP.NET Core + PostgreSQL)
 
 ## Hosting compatibility
 This solution is built for:
 - Windows web hosting
 - Plesk Control Panel
 - Shared hosting constraints
-- Microsoft SQL Server only
+- PostgreSQL (including Supabase)
 
-No Node.js, MongoDB, Firebase, or external backend service is required.
+No Node.js, MongoDB, or Firebase is required.
 
 ## Architecture (3-tier)
 - Frontend: HTML/CSS/JavaScript in `design-to-finish/frontend`
 - Backend: ASP.NET Core MVC-style controllers + REST APIs in `YeshiBackend`
-- Database: Microsoft SQL Server via Entity Framework Core
+- Database: PostgreSQL via Entity Framework Core (`Npgsql`)
 
 Business logic is in service classes under `Services/` and separated from API controllers.
 
@@ -68,15 +68,21 @@ Each table includes timestamp fields (`CreatedAt`, `UpdatedAt`) and orders use s
 - Public: `shop/home.html`, `shop/products.html`, `shop/product-details.html`, `shop/cart.html`, `shop/checkout.html`, login/register pages
 - Admin: `admin-panel/dashboard.html`, `admin-panel/add-product.html`, `admin-panel/edit-product.html`, `admin-panel/orders.html`
 
-## SQL Server configuration
+## PostgreSQL configuration
 Edit:
 - `appsettings.json`
 - `appsettings.Development.json`
 
 Example:
 ```json
-"DefaultConnection": "Server=localhost;Database=YeshiClothingDb;Trusted_Connection=True;TrustServerCertificate=True;"
+"DefaultConnection": "Host=db.bsmpncihhfczbvsmvdbf.supabase.co;Port=5432;Database=postgres;Username=postgres;Password=YOUR_PASSWORD;SSL Mode=Require;Trust Server Certificate=true;"
 ```
+
+For cloud deployment, prefer environment variables instead of storing secrets in files:
+- `ConnectionStrings__DefaultConnection`
+- `Jwt__Key`
+- `FrontendOrigins__0` (e.g. your Vercel domain)
+- `FrontendOrigins__1` (optional additional domain)
 
 ## Run locally
 ```bash
@@ -87,6 +93,6 @@ dotnet run
 ## Plesk/shared hosting notes
 - Publish as framework-dependent deployment.
 - Configure `ASPNETCORE_ENVIRONMENT=Production`.
-- Set production SQL Server connection string in `appsettings.Production.json` or Plesk environment variables.
+- Set production PostgreSQL connection string in `appsettings.Production.json` or Plesk environment variables.
 - Set a strong production `Jwt:Key`.
 - Ensure write permission for `Uploads/` folder.
