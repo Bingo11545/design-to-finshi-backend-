@@ -94,15 +94,29 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+var databaseReady = true;
+
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
-    await AppSeed.SeedAsync(db, scope.ServiceProvider.GetRequiredService<IConfiguration>());
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.EnsureCreated();
+        await AppSeed.SeedAsync(db, scope.ServiceProvider.GetRequiredService<IConfiguration>());
+    }
+    catch (Exception ex)
+    {
+        databaseReady = false;
+        logger.LogWarning(ex, "Database initialization failed. Application started without database connectivity.");
+    }
 }
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "Uploads");
+Directory.CreateDirectory(uploadsPath);
 
 app.Use(async (context, next) =>
 {
@@ -120,7 +134,7 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Uploads")),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 
@@ -132,7 +146,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/api/health", () => Results.Ok(new
+{
+    status = databaseReady ? "ok" : "degraded",
+    database = databaseReady ? "connected" : "unavailable"
+}));
 app.MapGet("/", () => Results.Ok(new { message = "Yeshi backend running" }));
 
 app.Run();
